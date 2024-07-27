@@ -8,7 +8,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
 app.use(bodyParser.json());
 
 // Function to format phone number to E.164 format
@@ -26,7 +28,7 @@ const formatPhoneNumber = (phoneNumber) => {
 app.get('/invitation', (req, res) => {
     res.json({
         title: "60 жыл",
-        content: "Құрметті ағайын-туыс бауырлар, нағашылар, жиен-бәлеелер, құда-құда жекжат, дос-жарандар, кластастар!\n\nСіздерді әкеміз Жанаттың мерей тойына арналған ақ дастарханымыздың қадірлі қонағы болуға шақырамыз!",
+        content: "Құрметті ағайын-туыс бауырлар, нағашылар, жиен-бөлелер, құда-жекжат, дос-жарандар, кластастар!\nСіздерді әкеміз Жанаттың мерей тойына арналған ақ дастарханымыздың қадірлі қонағы болуға шақырамыз!",
         date: "30.08.2024",
         time: "18:00",
         location: "с. Бесағаш, ул. Райымбек 145 А 'Ханшайым' мейрамханасы",
