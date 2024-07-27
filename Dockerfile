@@ -1,19 +1,15 @@
-FROM node:14
+FROM node:16
 
-# Устанавливаем рабочую директорию
+# Create app directory
 WORKDIR /app
 
-# Копируем package.json и package-lock.json
+# Install app dependencies
 COPY package*.json ./
 
-# Устанавливаем зависимости
 RUN npm install
 
-# Копируем остальные файлы приложения
+# Bundle app source
 COPY . .
 
-# Открываем порт
-EXPOSE 4000
-
-# Запускаем приложение
-CMD ["npm", "start"]
+EXPOSE 5000
+CMD [ "npm", "start" ]
