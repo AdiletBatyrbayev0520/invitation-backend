@@ -13,7 +13,7 @@ RUN npm install
 COPY . .
 
 # Открываем порт
-EXPOSE 5000
+EXPOSE 4000
 
 # Запускаем приложение
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
