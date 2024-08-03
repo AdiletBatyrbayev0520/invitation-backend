@@ -18,7 +18,7 @@ const keys = [
 
 // Middleware
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://invitation-frontend-umber.vercel.app']
+    origin: ['http://localhost:3000', 'https://invitation-frontend-umber.vercel.app', 'https://zhanat-60-zhyldyk.vercel.app']
 }));
 app.use(bodyParser.json());
 
