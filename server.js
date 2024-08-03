@@ -62,7 +62,7 @@ const updateKeyUsage = async () => {
     const keysUsage = await KeyUsage.find().sort({ _id: 1 });
 
     for (let i = 0; i < keysUsage.length; i++) {
-        if (keysUsage[i].count < 128) {
+        if (keysUsage[i].count < 64) {
             keysUsage[i].count += 1;
             await keysUsage[i].save();
             return keysUsage[i].key;
