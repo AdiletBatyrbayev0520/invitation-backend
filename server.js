@@ -2,9 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const fs = require('fs');
-const csv = require('csv-parser');
-const Guest = require('./guestModel');
 const schedule = require('node-schedule');
 require('dotenv').config();
 
@@ -15,7 +12,8 @@ const keys = [
     process.env.REACT_APP_2GIS_API_KEY_2,
     process.env.REACT_APP_2GIS_API_KEY_3,
     process.env.REACT_APP_2GIS_API_KEY_4,
-    process.env.REACT_APP_2GIS_API_KEY_5
+    process.env.REACT_APP_2GIS_API_KEY_5,
+    process.env.REACT_APP_2GIS_API_KEY_6
 ];
 
 // Middleware
@@ -36,7 +34,7 @@ const formatPhoneNumber = (phoneNumber) => {
 };
 
 // MongoDB connection
-const uri = process.env.MONGO_URI;
+const uri = process.env.MONGO_URL;
 
 mongoose.connect(uri, {
     useNewUrlParser: true,
@@ -45,56 +43,43 @@ mongoose.connect(uri, {
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// CSV file functions
-const csvFilePath = './keys_usage.csv';
+// Import KeyUsage model
+const KeyUsage = require('./keyModel');
 
-const readCSV = () => {
-    return new Promise((resolve, reject) => {
-        const results = [];
-        fs.createReadStream(csvFilePath)
-            .pipe(csv())
-            .on('data', (data) => results.push(data))
-            .on('end', () => {
-                resolve(results);
-            })
-            .on('error', (err) => {
-                reject(err);
-            });
-    });
-};
-
-const writeCSV = (data) => {
-    const headers = 'key,count\n';
-    const rows = data.map(row => `${row.key},${row.count}`).join('\n');
-    fs.writeFileSync(csvFilePath, headers + rows);
-};
-
-const updateKeyUsage = async () => {
-    let i = 0;
-    const data = await readCSV();
-    for (const keyData of data) {
-        if (parseInt(keyData.count) < 128) {
-            keyData.count = parseInt(keyData.count) + 1;
-            writeCSV(data);
-            return keys[i];
+// Initialize keys in the database
+const initializeKeys = async () => {
+    const keysCount = await KeyUsage.countDocuments();
+    if (keysCount === 0) {
+        for (const key of keys) {
+            await new KeyUsage({ key, count: 0 }).save();
         }
-        i++;
     }
+};
+initializeKeys();
+
+// Function to update key usage
+const updateKeyUsage = async () => {
+    const keysUsage = await KeyUsage.find().sort({ _id: 1 });
+
+    for (let i = 0; i < keysUsage.length; i++) {
+        if (keysUsage[i].count < 128) {
+            keysUsage[i].count += 1;
+            await keysUsage[i].save();
+            return keysUsage[i].key;
+        }
+    }
+
     // Reset counts if all keys exceed the limit
-    for (const keyData of data) {
-        keyData.count = 0;
+    for (let i = 0; i < keysUsage.length; i++) {
+        keysUsage[i].count = 0;
+        await keysUsage[i].save();
     }
-    writeCSV(data);
-    return keys[0];
+    return keysUsage[0].key;
 };
 
 // Schedule job to reset counts at midnight
 schedule.scheduleJob('0 0 * * *', async () => {
-    const data = await readCSV();
-    for (const keyData of data) {
-        keyData.count = 0;
-    }
-    writeCSV(data);
+    await KeyUsage.updateMany({}, { count: 0 });
 });
 
 // Routes
